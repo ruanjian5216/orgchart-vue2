@@ -5,9 +5,11 @@
       <div class="org-tree-node" :class="{ 'is-leaf': isLeaf }">
         <!-- 节点标签区域 -->
         <div class="org-tree-node-label">
-          <div class="org-tree-node-label-inner" :style="{ border: hideBorder ? 'none' : '1px solid ' + borderColor }">
-            <slot :node="node">{{ node.name }}</slot>
+           <slot :node="node">
+          <div class="org-tree-node-label-inner">
+            {{ node.name }}
           </div>
+        </slot>
         </div>
         <!-- 子节点容器 -->
         <div v-if="node.children && node.children.length > 0" class="org-tree-node-children">
