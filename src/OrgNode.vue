@@ -12,16 +12,8 @@
         <!-- 子节点容器 -->
         <div v-if="node.children && node.children.length > 0" class="org-tree-node-children">
           <!-- 递归渲染子节点 -->
-          <OrgNode 
-            v-for="(child, i) in node.children" 
-            :key="i" 
-            :node="child"
-            :is-root="false"
-            :borderColor="borderColor"
-            :lineColor="lineColor"
-            :lineWidth="lineWidth"
-            :hideBorder="hideBorder"
-          >
+          <OrgNode v-for="(child, i) in node.children" :key="i" :node="child" :is-root="false"
+            :borderColor="borderColor" :lineColor="lineColor" :lineWidth="lineWidth" :hideBorder="hideBorder">
             <!-- 传递插槽内容到子节点 -->
             <template #default="slotProps">
               <slot :node="slotProps.node"></slot>
@@ -32,26 +24,23 @@
     </div>
   </div>
   <!-- 非根节点直接渲染 -->
-  <div v-else class="org-tree-node" :class="{ 'is-leaf': isLeaf }" :style="{ '--line-width': lineWidth, '--line-color': lineColor }">
+  <div v-else class="org-tree-node" :class="{ 'is-leaf': isLeaf }"
+    :style="{ '--line-width': lineWidth, '--line-color': lineColor }">
     <!-- 节点标签区域 -->
     <div class="org-tree-node-label">
-      <div class="org-tree-node-label-inner" :style="{ border: hideBorder ? 'none' : '1px solid ' + borderColor }">
-        <slot :node="node">{{ node.name }}</slot>
+      <div :style="{ border: hideBorder ? 'none' : '1px solid ' + borderColor }">
+        <slot :node="node">
+          <div class="org-tree-node-label-inner">
+            {{ node.name }}
+          </div>
+        </slot>
       </div>
     </div>
     <!-- 子节点容器 -->
     <div v-if="node.children && node.children.length > 0" class="org-tree-node-children">
       <!-- 递归渲染子节点 -->
-      <OrgNode 
-        v-for="(child, i) in node.children" 
-        :key="i" 
-        :node="child"
-        :is-root="false"
-        :borderColor="borderColor"
-        :lineColor="lineColor"
-        :lineWidth="lineWidth"
-        :hideBorder="hideBorder"
-      >
+      <OrgNode v-for="(child, i) in node.children" :key="i" :node="child" :is-root="false" :borderColor="borderColor"
+        :lineColor="lineColor" :lineWidth="lineWidth" :hideBorder="hideBorder">
         <!-- 传递插槽内容到子节点 -->
         <template #default="slotProps">
           <slot :node="slotProps.node"></slot>
@@ -95,9 +84,8 @@ export default {
   }
 };
 </script>
- 
-<style  lang="scss">
 
+<style lang="scss">
 /* 组织架构树容器 */
 .org-tree-container {
   display: inline-block;
@@ -183,6 +171,7 @@ export default {
   /* Vue2中需要通过动态绑定实现: border-left: lineWidth solid lineColor; */
   border-left: var(--line-width, 1px) solid var(--line-color, #ddd);
 }
+
 .org-tree-node:not(:first-child):before,
 .org-tree-node:not(:last-child):after {
   /* Vue2中需要通过动态绑定实现: border-top: lineWidth solid lineColor; */
@@ -190,11 +179,11 @@ export default {
 }
 
 /* 根节点特殊处理 */
-.org-tree > .org-tree-node {
+.org-tree>.org-tree-node {
   padding-top: 0;
 }
 
-.org-tree > .org-tree-node:after {
+.org-tree>.org-tree-node:after {
   border-left: 0;
 }
 
