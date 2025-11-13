@@ -9,6 +9,7 @@
         transformOrigin: 'center' 
       }"
       @mousedown="handleMouseDown"
+      @touchstart="handleTouchStart"
     >
       <!-- 使用自定义节点组件，并通过插槽实现自定义内容样式 -->
       <OrgNode :node="treeData" :lineColor="lineColor" :lineWidth="lineWidth" >
@@ -85,6 +86,9 @@ export default {
     document.removeEventListener('wheel', this.preventDefaultZoom);
     document.removeEventListener('mousemove', this.handleMouseMove);
     document.removeEventListener('mouseup', this.handleMouseUp);
+    document.removeEventListener('touchmove', this.handleTouchMove);
+    document.removeEventListener('touchend', this.handleTouchEnd);
+    document.removeEventListener('touchcancel', this.handleTouchEnd);
   },
   methods: {
     // 处理滚轮事件
@@ -140,6 +144,24 @@ export default {
         event.preventDefault();
       }
     },
+    // 触摸开始事件处理
+    handleTouchStart(event) {
+      if (event.touches && event.touches.length === 1) {
+        this.isDragging = true;
+        const touch = event.touches[0];
+        this.startX = touch.clientX;
+        this.startY = touch.clientY;
+        this.startTranslateX = this.translateX;
+        this.startTranslateY = this.translateY;
+        if (this.$refs.orgChartRef) {
+          this.$refs.orgChartRef.classList.add('dragging');
+        }
+        document.addEventListener('touchmove', this.handleTouchMove, { passive: false });
+        document.addEventListener('touchend', this.handleTouchEnd);
+        document.addEventListener('touchcancel', this.handleTouchEnd);
+        event.preventDefault();
+      }
+    },
     // 鼠标移动事件处理
     handleMouseMove(event) {
       if (this.isDragging) {
@@ -160,6 +182,23 @@ export default {
         });
       }
     },
+    // 触摸移动事件处理
+    handleTouchMove(event) {
+      if (this.isDragging && event.touches && event.touches.length === 1) {
+        if (this.animationFrameId) {
+          cancelAnimationFrame(this.animationFrameId);
+        }
+        const touch = event.touches[0];
+        this.animationFrameId = requestAnimationFrame(() => {
+          const dx = touch.clientX - this.startX;
+          const dy = touch.clientY - this.startY;
+          this.translateX = this.startTranslateX + dx;
+          this.translateY = this.startTranslateY + dy;
+          this.animationFrameId = null;
+        });
+        event.preventDefault();
+      }
+    },
     // 鼠标释放事件处理
     handleMouseUp() {
       this.isDragging = false;
@@ -178,6 +217,20 @@ export default {
       // 移除全局事件监听器
       document.removeEventListener('mousemove', this.handleMouseMove);
       document.removeEventListener('mouseup', this.handleMouseUp);
+    },
+    // 触摸结束事件处理
+    handleTouchEnd() {
+      this.isDragging = false;
+      if (this.$refs.orgChartRef) {
+        this.$refs.orgChartRef.classList.remove('dragging');
+      }
+      if (this.animationFrameId) {
+        cancelAnimationFrame(this.animationFrameId);
+        this.animationFrameId = null;
+      }
+      document.removeEventListener('touchmove', this.handleTouchMove);
+      document.removeEventListener('touchend', this.handleTouchEnd);
+      document.removeEventListener('touchcancel', this.handleTouchEnd);
     },
     // 重置视图
     resetView() {
@@ -207,6 +260,7 @@ export default {
   text-align: center;
   transition: transform 0.2s ease;
   cursor: grab;
+  touch-action: none;
   
   &.dragging {
     transition: none;
