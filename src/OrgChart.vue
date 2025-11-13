@@ -5,8 +5,8 @@
       ref="orgChartRef" 
       @wheel="handleWheel" 
       :style="{ 
-        transform: `scale(${scale}) translate(${translateX}px, ${translateY}px)`, 
-        transformOrigin: 'center' 
+        transform: `translate(${translateX}px, ${translateY}px) scale(${scale})`, 
+        transformOrigin: 'top left' 
       }"
       @mousedown="handleMouseDown"
       @touchstart="handleTouchStart"
@@ -77,18 +77,31 @@ export default {
       animationFrameId: null
     };
   },
+  watch: {
+    treeData: {
+      handler() {
+        this.$nextTick(() => {
+          this.fitToContainer();
+        });
+      },
+      deep: true
+    }
+  },
   mounted() {
-    // 添加全局事件监听器来阻止浏览器默认缩放
     document.addEventListener('wheel', this.preventDefaultZoom, { passive: false });
+    this.$nextTick(() => {
+      this.fitToContainer();
+      window.addEventListener('resize', this.fitToContainer);
+    });
   },
   beforeDestroy() {
-    // 清理事件监听器
     document.removeEventListener('wheel', this.preventDefaultZoom);
     document.removeEventListener('mousemove', this.handleMouseMove);
     document.removeEventListener('mouseup', this.handleMouseUp);
     document.removeEventListener('touchmove', this.handleTouchMove);
     document.removeEventListener('touchend', this.handleTouchEnd);
     document.removeEventListener('touchcancel', this.handleTouchEnd);
+    window.removeEventListener('resize', this.fitToContainer);
   },
   methods: {
     // 处理滚轮事件
@@ -234,15 +247,32 @@ export default {
     },
     // 重置视图
     resetView() {
-      this.scale = 1;
-      this.translateX = 0;
-      this.translateY = 0;
+      this.fitToContainer();
     },
     // 阻止浏览器默认的Ctrl+滚轮缩放行为
     preventDefaultZoom(event) {
       if (event.ctrlKey && (event.deltaY !== 0)) {
         event.preventDefault();
       }
+    },
+    fitToContainer() {
+      const container = this.$el;
+      const chart = this.$refs && this.$refs.orgChartRef ? this.$refs.orgChartRef : null;
+      const content = chart ? chart.querySelector('.org-tree-container') : null;
+      if (!container || !chart || !content) return;
+      const containerWidth = container.clientWidth;
+      const containerHeight = container.clientHeight;
+      const contentWidth = content.offsetWidth;
+      const contentHeight = content.offsetHeight;
+      if (!contentWidth || !contentHeight || !containerWidth || !containerHeight) return;
+      const padding = 20;
+      const fitWidth = Math.max(0, containerWidth - padding * 2);
+      const fitHeight = Math.max(0, containerHeight - padding * 2);
+      let s = Math.min(fitWidth / contentWidth, fitHeight / contentHeight);
+      s = Math.max(this.minScale, Math.min(s, this.maxScale));
+      this.scale = s;
+      this.translateX = (containerWidth - contentWidth * s) / 2;
+      this.translateY = (containerHeight - contentHeight * s) / 2;
     }
   }
 };
